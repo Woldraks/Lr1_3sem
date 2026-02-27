@@ -1,0 +1,7 @@
+SETADD apple
+SETADD banana
+SETADD orange
+SET_AT apple
+SET_AT grape
+SETDEL banana
+SET_AT banana
