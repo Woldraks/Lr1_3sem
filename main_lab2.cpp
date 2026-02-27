@@ -16,19 +16,35 @@ using namespace std;
 
 void testXML() {
     cout << "\n=== ТЕСТ 1.7: XML Восстановление (использует Stack из 1 лабы) ===" << endl;
+    cout << "Проверка правил из задания:" << endl;
+    cout << "Правило 1: Пустая строка - корректный XML" << endl;
+    cout << "Правило 2: Если A и B корректны, то AB корректен" << endl;
+    cout << "Правило 3: Если A корректен, то <X>A</X> корректен" << endl;
+    cout << "----------------------------------------" << endl;
+    
     vector<string> testCases;
-    testCases.push_back("<a></b>");
-    testCases.push_back("<a><b></a></b>");
-    testCases.push_back("<a><b></b></a>");
-    testCases.push_back("a");
+    testCases.push_back("<a></b>");           // нужно восстановить
+    testCases.push_back("<a><b></a></b>");    // нужно восстановить
+    testCases.push_back("<a><b></b></a>");    // уже корректный
+    testCases.push_back("");                   // пустая строка (правило 1)
+    testCases.push_back("<a></a><b></b>");    // конкатенация (правило 2)
     
     for (size_t i = 0; i < testCases.size(); i++) {
-        cout << "Исходная строка: " << testCases[i] << endl;
-        string recovered = XMLValidator::recoverXML(testCases[i]);
-        if (recovered.empty()) {
-            cout << "Восстановленная: (невозможно восстановить)" << endl;
-        } else {
-            cout << "Восстановленная: " << recovered << endl;
+        cout << "Исходная строка: \"" << testCases[i] << "\"" << endl;
+        
+        // Проверяем, корректна ли строка
+        bool isValid = XMLValidator::isValidXML(testCases[i]);
+        cout << "Корректна? " << (isValid ? "да" : "нет") << endl;
+        
+        if (!isValid) {
+            string recovered = XMLValidator::recoverXML(testCases[i]);
+            if (recovered.empty()) {
+                cout << "Восстановленная: (невозможно восстановлить)" << endl;
+            } else {
+                cout << "Восстановленная: \"" << recovered << "\"" << endl;
+                cout << "После восстановления корректна? " 
+                     << (XMLValidator::isValidXML(recovered) ? "да" : "нет") << endl;
+            }
         }
         cout << "-------------------" << endl;
     }
@@ -36,44 +52,84 @@ void testXML() {
 
 void testHashSet() {
     cout << "\n=== ТЕСТ 2: АТД Множество (операции над множествами) ===" << endl;
+    cout << "Команды: SETADD, SETDEL, SET_AT" << endl;
+    cout << "----------------------------------------" << endl;
     
-    HashSet* set1 = CreateHashSet(8);
-    SetAdd(set1, "apple");
-    SetAdd(set1, "banana");
-    SetAdd(set1, "orange");
-    SetAdd(set1, "grape");
+    HashSet* set = CreateHashSet(8);
     
-    HashSet* set2 = CreateHashSet(8);
-    SetAdd(set2, "banana");
-    SetAdd(set2, "orange");
-    SetAdd(set2, "kiwi");
-    SetAdd(set2, "mango");
+    cout << "SETADD apple" << endl;
+    SetAdd(set, "apple");
     
-    cout << "Множество 1: ";
-    SetPrint(set1);
-    cout << "Множество 2: ";
-    SetPrint(set2);
+    cout << "SETADD banana" << endl;
+    SetAdd(set, "banana");
     
-    HashSet* unionSet = SetUnion(set1, set2);
-    cout << "Объединение: ";
-    SetPrint(unionSet);
+    cout << "SETADD orange" << endl;
+    SetAdd(set, "orange");
     
-    HashSet* intersectionSet = SetIntersection(set1, set2);
-    cout << "Пересечение: ";
-    SetPrint(intersectionSet);
+    cout << "SET_AT apple: " << (SetAt(set, "apple") ? "true" : "false") << endl;
+    cout << "SET_AT grape: " << (SetAt(set, "grape") ? "true" : "false") << endl;
     
-    HashSet* diffSet = SetDifference(set1, set2);
-    cout << "Разность (set1 \\ set2): ";
-    SetPrint(diffSet);
+    cout << "SETDEL banana" << endl;
+    SetDel(set, "banana");
     
-    DestroyHashSet(set1);
-    DestroyHashSet(set2);
-    DestroyHashSet(unionSet);
-    DestroyHashSet(intersectionSet);
-    DestroyHashSet(diffSet);
+    cout << "SET_AT banana: " << (SetAt(set, "banana") ? "true" : "false") << endl;
+    
+    cout << "Финальное множество: ";
+    SetPrint(set);
+    
+    DestroyHashSet(set);
 }
 
-
+void testSetPartition() {
+    cout << "\n=== ТЕСТ 3.1: Разбиение множества (использует HashSet из задания 2) ===" << endl;
+    
+    // Тест 1: Разбиение на равные суммы
+    Array* set = CreateArray(8);
+    Push(set, "4");
+    Push(set, "10");
+    Push(set, "5");
+    Push(set, "1");
+    Push(set, "3");
+    Push(set, "7");
+    
+    int targetSum = 15;
+    
+    cout << "Исходное множество: ";
+    Print(set);
+    cout << "Целевая сумма: " << targetSum << endl;
+    
+    PartitionResult result = SetPartitioner::partitionIntoEqualSums(set, targetSum);
+    SetPartitioner::printPartition(result);
+    SetPartitioner::destroyPartition(result);
+    
+    // Тест 2: Поиск максимального пересечения (вариант 4)
+    cout << "\nПоиск двух множеств с максимальным пересечением:" << endl;
+    
+    Array* sets[4];
+    sets[0] = CreateArray(8);
+    Push(sets[0], "1"); Push(sets[0], "2"); Push(sets[0], "3");
+    
+    sets[1] = CreateArray(8);
+    Push(sets[1], "2"); Push(sets[1], "3"); Push(sets[1], "4");
+    
+    sets[2] = CreateArray(8);
+    Push(sets[2], "5"); Push(sets[2], "6");
+    
+    sets[3] = CreateArray(8);
+    Push(sets[3], "3"); Push(sets[3], "4"); Push(sets[3], "5");
+    
+    for (int i = 0; i < 4; i++) {
+        cout << "Множество " << i + 1 << ": ";
+        Print(sets[i]);
+    }
+    
+    SetPartitioner::findMaxIntersection(sets, 4);
+    
+    for (int i = 0; i < 4; i++) {
+        Destroy(sets[i]);
+    }
+    Destroy(set);
+}
 
 void testSubarrays() {
     cout << "\n=== ТЕСТ 4.1: Различные подмассивы (использует Array из 1 лабы) ===" << endl;
@@ -118,6 +174,7 @@ void testIsomorphicStrings() {
     IsomorphicChecker::printResult("fall", "redd");
     IsomorphicChecker::printResult("mad", "odd");
     IsomorphicChecker::printResult("paper", "title");
+    IsomorphicChecker::printResult("abca", "zbxz");
 }
 
 void testLRUCache() {
@@ -139,18 +196,23 @@ void testLRUCache() {
 }
 
 int main() {
-    cout << "===== ЛАБОРАТОРНАЯ РАБОТА №2 =====" << endl;
+    cout << "===========================================" << endl;
+    cout << "     ЛАБОРАТОРНАЯ РАБОТА №2" << endl;
     cout << "Максимальное использование структур из 1 лабораторной" << endl;
     cout << "===========================================" << endl;
     
     testXML();
     testHashSet();
-    
+    testSetPartition();
     testSubarrays();
     testBSTHeight();
     testHashTable();
     testIsomorphicStrings();
     testLRUCache();
+    
+    cout << "\n===========================================" << endl;
+    cout << "           ВСЕ ТЕСТЫ ВЫПОЛНЕНЫ" << endl;
+    cout << "===========================================" << endl;
     
     return 0;
 }
