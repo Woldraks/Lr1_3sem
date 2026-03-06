@@ -1,0 +1,12 @@
+	
+1.7 XML	7	Stack/XMLValidator.*	✅ Stack
+2. АТД Множество	-	HashSet/HashSet.*	✅ Array
+3.1 Разбиение множества	1	SetPartition/SetPartition.*	✅ Array + ✅ HashSet (из зад.2)
+4.1 Различные подмассивы	1	Array/Subarrays/Subarrays.*	✅ Array
+5.7 Высота дерева	7	Tree/BSTHeight/BSTHeight.*	✅ Tree
+6.1 Хеш-таблицы	1	HashTable/HashTable.*	✅ ForwardList
+6.7 Изоморфные строки	7	HashTable/IsomorphicStrings.*	❌ алгоритмическое
+7.1 LRU кэш	1	LRUCache/LRUCache.*	✅ DoublyLinkedList
+
+
+./set_program --file test_set.txt

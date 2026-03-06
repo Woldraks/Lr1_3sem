@@ -69,11 +69,11 @@ void OpenAddressingInsert(HashTable* ht, string key, string value) {
         
         delete[] oldTable;
     }
-    
+    // Вычисляем начальную позицию
     int index = hashString(key, ht->capacity);
     int originalIndex = index;
     int probes = 0;
-    
+     // Ищем свободное место 
     while (ht->table[index].isOccupied && !ht->table[index].isDeleted) {
         if (ht->table[index].key == key) {
             ht->table[index].value = value;
@@ -83,7 +83,7 @@ void OpenAddressingInsert(HashTable* ht, string key, string value) {
         int step = hashString2(key, ht->capacity);
         index = (index + step) % ht->capacity;
         probes++;
-        
+        // Проверка на зацикливание
         if (index == originalIndex) {
             // Таблица заполнена, нужно расширение
             int oldCapacity = ht->capacity;
@@ -99,7 +99,7 @@ void OpenAddressingInsert(HashTable* ht, string key, string value) {
                 ht->table[i].isOccupied = false;
                 ht->table[i].isDeleted = false;
             }
-            
+            // Перехешируем старые элементы
             for (int i = 0; i < oldCapacity; i++) {
                 if (oldTable[i].isOccupied && !oldTable[i].isDeleted) {
                     OpenAddressingInsert(ht, oldTable[i].key, oldTable[i].value);
@@ -113,12 +113,12 @@ void OpenAddressingInsert(HashTable* ht, string key, string value) {
             return;
         }
     }
-    
+    // Если были пробы - это коллизия
     if (probes > 0) {
         ht->collisions++;
         ht->probeCount += probes;
     }
-    
+    // Вставляем элемент
     ht->table[index].key = key;
     ht->table[index].value = value;
     ht->table[index].isOccupied = true;
@@ -177,9 +177,10 @@ void DestroyChainedTable(ChainedHashTable* ht) {
 
 void ChainedInsert(ChainedHashTable* ht, string key, string value) {
     if (ht == nullptr) return;
-    
+    // ===== ШАГ 1: Вычисляем индекс корзины =====
+    // Хеш-функция превращает ключ в число от 0 до capacity-1
     int index = hashString(key, ht->capacity);
-    
+     // ===== ШАГ 2: Ищем, нет ли уже такого ключа в цепочке =====
     ChainNode* curr = ht->buckets[index];
     while (curr != nullptr) {
         if (curr->key == key) {
@@ -188,10 +189,12 @@ void ChainedInsert(ChainedHashTable* ht, string key, string value) {
         }
         curr = curr->next;
     }
-    
+    // ===== ШАГ 3: Создаем новый узел (ключа не нашлось) =====
     ChainNode* newNode = new ChainNode;
     newNode->key = key;
     newNode->value = value;
+     // ===== ШАГ 4: Вставляем в НАЧАЛО списка =====
+    // Новый узел будет указывать на то, что раньше было первым
     newNode->next = ht->buckets[index];
     
     if (ht->buckets[index] != nullptr) {
@@ -225,7 +228,7 @@ void runEmpiricalAnalysis(int numElements, int numSearches) {
     
     random_device rd;
     mt19937 gen(rd());
-    uniform_int_distribution<> dis(1, 1000000);
+    uniform_int_distribution<> dis(1, 10000);
     
     // Открытая адресация
     cout << "\nТестирование открытой адресации..." << endl;

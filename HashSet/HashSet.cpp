@@ -172,6 +172,7 @@ HashSet* SetUnion(HashSet* set1, HashSet* set2) {
     return result;
 }
 
+
 HashSet* SetIntersection(HashSet* set1, HashSet* set2) {
     HashSet* result = CreateHashSet((set1->capacity < set2->capacity) ? set1->capacity : set2->capacity);
     

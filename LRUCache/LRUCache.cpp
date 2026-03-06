@@ -1,13 +1,13 @@
 #include "LRUCache.h"
-#include "../LinkedList/DoublyLinkedList.h"
 #include <iostream>
-#include <string>
 using namespace std;
 
-LRUCache::LRUCache(int cap) : capacity(cap), head(nullptr), tail(nullptr) {
-    list = CreateLinkedList();
+// ===== КОНСТРУКТОР =====
+LRUCache::LRUCache(int cap) : capacity(cap), size(0), head(nullptr), tail(nullptr) {
+
 }
 
+// ===== ДЕСТРУКТОР =====
 LRUCache::~LRUCache() {
     LRUNode* current = head;
     while (current != nullptr) {
@@ -15,13 +15,14 @@ LRUCache::~LRUCache() {
         delete current;
         current = next;
     }
-    Destroy(list);
+    // 🟢 Убрали Destroy(list)!
 }
 
+// ===== ПЕРЕМЕСТИТЬ В НАЧАЛО =====
 void LRUCache::moveToHead(LRUNode* node) {
     if (node == nullptr || node == head) return;
     
-    // Удаляем node из текущей позиции
+    // Вырезаем узел из текущей позиции
     if (node->prev != nullptr) {
         node->prev->next = node->next;
     }
@@ -46,8 +47,12 @@ void LRUCache::moveToHead(LRUNode* node) {
     }
 }
 
+// ===== УДАЛИТЬ САМЫЙ СТАРЫЙ =====
 void LRUCache::removeTail() {
     if (tail == nullptr) return;
+    
+    // Удаляем из хеш-таблицы
+    cache.erase(tail->key);
     
     LRUNode* toDelete = tail;
     
@@ -61,84 +66,90 @@ void LRUCache::removeTail() {
     }
     
     delete toDelete;
+    size--;
 }
 
+// ===== GET - ПОЛУЧИТЬ ЗНАЧЕНИЕ =====
 string LRUCache::get(string key) {
-    LRUNode* current = head;
-    while (current != nullptr) {
-        if (current->key == key) {
-            moveToHead(current);
-            return current->value;
-        }
-        current = current->next;
+    // 🟢 Быстрый поиск через хеш-таблицу O(1)
+    auto it = cache.find(key);
+    if (it == cache.end()) {
+        return "-1";
     }
-    return "-1";
+    
+    LRUNode* node = it->second;
+    moveToHead(node);  // Перемещаем в начало (свежий)
+    return node->value;
 }
 
+// ===== SET - ПОЛОЖИТЬ ЗНАЧЕНИЕ =====
 void LRUCache::set(string key, string value) {
-    // Ищем существующий элемент
-    LRUNode* current = head;
-    while (current != nullptr) {
-        if (current->key == key) {
-            current->value = value;
-            moveToHead(current);
-            return;
-        }
-        current = current->next;
-    }
+    // 🟢 Проверяем через хеш-таблицу O(1)
+    auto it = cache.find(key);
     
-    // Создаем новый
-    LRUNode* newNode = new LRUNode(key, value);
-    
-    if (head == nullptr) {
-        head = tail = newNode;
+    if (it != cache.end()) {
+        // Ключ уже есть - обновляем
+        LRUNode* node = it->second;
+        node->value = value;
+        moveToHead(node);
     } else {
-        newNode->next = head;
-        head->prev = newNode;
-        head = newNode;
-    }
-    
-    // Проверяем превышение емкости
-    int count = 0;
-    current = head;
-    while (current != nullptr) {
-        count++;
-        current = current->next;
-    }
-    
-    if (count > capacity) {
-        removeTail();
+        // Новый ключ - создаем узел
+        LRUNode* newNode = new LRUNode(key, value);
+        
+        // Добавляем в хеш-таблицу
+        cache[key] = newNode;
+        
+        // Вставляем в начало списка
+        if (head == nullptr) {
+            head = tail = newNode;
+        } else {
+            newNode->next = head;
+            head->prev = newNode;
+            head = newNode;
+        }
+        
+        size++;  // 🟢 Увеличиваем счетчик
+        
+        // Проверяем, не превышен ли размер
+        if (size > capacity) {
+            removeTail();  // Удаляем самый старый
+            // size уменьшится в removeTail()
+        }
     }
 }
 
+// ===== ПЕЧАТЬ КЭША =====
 void LRUCache::printCache() {
-    cout << "LRU Cache (от наиболее свежего к наименее используемому):" << endl;
+    cout << "LRU Cache (от свежего к старому):" << endl;
     LRUNode* current = head;
-    int count = 0;
+    int pos = 1;
     while (current != nullptr) {
-        cout << "  [" << count + 1 << "] " << current->key << " -> " << current->value << endl;
+        cout << "  [" << pos++ << "] " << current->key << " -> " << current->value << endl;
         current = current->next;
-        count++;
     }
-    cout << "Размер: " << count << "/" << capacity << endl;
+    cout << "Размер: " << size << "/" << capacity << endl;
 }
 
+// ===== СИМУЛЯТОР =====
 void LRUCacheSimulator::simulate(int cacheSize, const vector<LRUCacheCommand>& commands) {
     LRUCache cache(cacheSize);
     
-    cout << "=== LRU КЭШ (емкость: " << cacheSize << ") ===" << endl;
-    cout << "----------------------------------------" << endl;
+    cout << "\n=== LRU КЭШ (емкость: " << cacheSize << ") ===" << endl;
+    cout << "==========================================" << endl;
     
     for (size_t i = 0; i < commands.size(); i++) {
+        cout << "\n👉 Команда " << i+1 << ": ";
+        
         if (commands[i].type == "SET") {
             cout << "SET " << commands[i].key << " = " << commands[i].value << endl;
             cache.set(commands[i].key, commands[i].value);
-        } else if (commands[i].type == "GET") {
+        } 
+        else if (commands[i].type == "GET") {
             string result = cache.get(commands[i].key);
             cout << "GET " << commands[i].key << " -> " << result << endl;
         }
         
         cache.printCache();
-        cout << "----------------------------------------" << endl;
+        cout << "------------------------------------------" << endl;
     }
 }
